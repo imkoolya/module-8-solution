@@ -5,7 +5,8 @@ class Program
 {
     static void Main()
     {
-        string folderPath = @"C:\путь\к\папке";
+        Console.WriteLine("Введите путь к папке:");
+        string folderPath = Console.ReadLine();
         var thresholdMinutes = TimeSpan.FromMinutes(30);
 
         try
