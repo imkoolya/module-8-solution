@@ -1,62 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-class Student
+﻿namespace task_4
 {
-    public string Name { get; set; }
-    public string Group { get; set; }
-    public DateTime DateOfBirth { get; set; }
-    public decimal AverageGrade { get; set; }
-}
-
-class Program
-{
-    static void Main()
+    class Student
     {
-        string binaryFilePath = GetBinaryFilePathFromUser();
-
-        try
+        public string Name { get; set; }
+        public string Group { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public decimal AverageScore { get; set; }
+    }
+    class Program
+    {
+        static string GetBinaryFilePathFromUser()
         {
-            List<Student> students = ReadStudentsFromBinaryFile(binaryFilePath);
-            CreateDirectoryForStudents();
-            DistributeStudentsByGroup(students);
-            Console.WriteLine("Программа успешно завершила свою работу.");
+            Console.Write("Введите путь к бинарному файлу: ");
+            return Console.ReadLine();
         }
-        catch (Exception ex)
+        static void Main()
         {
-            Console.WriteLine($"Произошла ошибка: {ex.Message}");
-        }
-    }
+            string binaryFilePath = GetBinaryFilePathFromUser();
 
-    static string GetBinaryFilePathFromUser()
-    {
-        Console.Write("Введите путь к бинарному файлу: ");
-        return Console.ReadLine();
-    }
-
-    static List<Student> ReadStudentsFromBinaryFile(string filePath)
-    {
-        throw new NotImplementedException();
-    }
-
-    static void CreateDirectoryForStudents()
-    {
-        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        string studentsDirectoryPath = Path.Combine(desktopPath, "Students");
-        Directory.CreateDirectory(studentsDirectoryPath);
-    }
-
-    static void DistributeStudentsByGroup(List<Student> students)
-    {
-        foreach (var group in students.GroupBy(s => s.Group))
-        {
-            string groupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Students", $"{group.Key}.txt");
-            using (StreamWriter writer = new StreamWriter(groupFilePath))
+            try
             {
-                foreach (var student in group)
+                List<Student> students = ReadStudentsFromBinaryFile(binaryFilePath);
+                CreateDirectoryForStudents();
+                DistributeStudentsByGroup(students);
+                Console.WriteLine("Программа успешно завершила свою работу.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Произошла ошибка: {ex.Message}");
+            }
+        }
+        static List<Student> ReadStudentsFromBinaryFile(string fileName)
+        {
+            List<Student> result = new();
+            using FileStream fs = new FileStream(fileName, FileMode.Open);
+            using StreamReader sr = new StreamReader(fs);
+
+            Console.WriteLine(sr.ReadToEnd());
+
+            fs.Position = 0;
+
+            BinaryReader br = new BinaryReader(fs);
+
+            while (fs.Position < fs.Length)
+            {
+                Student student = new Student();
+                student.Name = br.ReadString();
+                student.Group = br.ReadString();
+                long dt = br.ReadInt64();
+                student.DateOfBirth = DateTime.FromBinary(dt);
+                student.AverageScore = br.ReadDecimal();
+
+                result.Add(student);
+            }
+
+            fs.Close();
+            return result;
+        }
+        static void CreateDirectoryForStudents()
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string studentsDirectoryPath = Path.Combine(desktopPath, "Students");
+            Directory.CreateDirectory(studentsDirectoryPath);
+        }
+        static void DistributeStudentsByGroup(List<Student> students)
+        {
+            foreach (var group in students.GroupBy(s => s.Group))
+            {
+                string groupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Students", $"{group.Key}.txt");
+                using (StreamWriter writer = new StreamWriter(groupFilePath))
                 {
-                    writer.WriteLine($"{student.Name}, {student.DateOfBirth}, {student.AverageGrade}");
+                    foreach (var student in group)
+                    {
+                        writer.WriteLine($"{student.Name}, {student.DateOfBirth}, {student.AverageScore}");
+                    }
                 }
             }
         }
